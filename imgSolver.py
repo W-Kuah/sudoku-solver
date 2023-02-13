@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import imutils
 from solver import *
+import os
 
 # As we are trying to predict any number from 1-9, we create an array containing 0 to 9
 CLASSES = np.arange(0,10)
@@ -66,7 +67,7 @@ def split_boxes(board):
     
     return boxes
 
-def displayNumbers(img, numbers, color=(0,255,0)):
+def displayNumbers(img, numbers, color=(255,0,255)):
     W = int(img.shape[1]/9)
     H = int(img.shape[0]/9)
     for i in range (9):
@@ -87,7 +88,7 @@ def get_InvPerspective(trans_img, masked_num, location, trans_height = 900, tran
 
 def orientateImg(img, def_height=368, def_width=490):
     height, width, channels = img.shape
-    print(f"Original:\n   Height: {height}\n   Width: {width}")
+    # print(f"Original:\n   Height: {height}\n   Width: {width}")
     if height > def_height or width > def_width:
         height_diff = height - def_height
         width_diff = width - def_width
@@ -101,12 +102,12 @@ def orientateImg(img, def_height=368, def_width=490):
             width = def_width
         dim = (width, height)
         img = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-        print(f"New:\n   Height: {height}\n   Width: {width}")
+        # print(f"New:\n   Height: {height}\n   Width: {width}")
     return img
     
-def solveSudokuImg(actual_image):
+def solveSudokuImg(actual_image, pathToFile="Input"):
     # Read image
-    img = cv2.imread("Input/" + actual_image)
+    img = cv2.imread(os.path.join(pathToFile, actual_image))
     img = orientateImg(img)
     #cv2.imshow("Input image", img)
 
@@ -153,18 +154,23 @@ def solveSudokuImg(actual_image):
         inv = get_InvPerspective(img, solved_board_mask, location)
         #cv2.imshow("Inverse Perspective", inv)
         ## 
-        combined = cv2.addWeighted(img, 1, inv, 1, 0)
+        combined = cv2.addWeighted(img, 0.6, inv, 1, 0)
         #cv2.imshow("Final result", combined)
-        cv2.imwrite("Output/Result-" + actual_image, combined)
+        cv2.imwrite(os.path.join("Output", "Result-" + actual_image), combined)
         #cv2.waitKey(0)
     except:
         print("Solution doesn't exist. Model misread digits.")
 
     cv2.destroyAllWindows()
 
+
+def test():
+    solveSudokuImg('sudokuImg0.jpg',pathToFile="testInput")
+    solveSudokuImg('sudokuImg1.jpg',pathToFile="testInput")
+    solveSudokuImg('sudokuImg2.jpg',pathToFile="testInput")
+    solveSudokuImg('squares.jpg',pathToFile="testInput")
+    solveSudokuImg('math.jpg',pathToFile="testInput")
+
+
 if __name__ == "__main__":
-    solveSudokuImg('sudokuImg0.jpg')
-    solveSudokuImg('sudokuImg1.jpg')
-    #solveSudokuImg('sudokuImg2.jpg')
-    solveSudokuImg('squares.jpg')
-    solveSudokuImg('math.jpg')
+    test()
