@@ -50,7 +50,6 @@ Author: Warren Kuah
 
 Foundations:
     - https://data-flair.training/blogs/opencv-sudoku-solver/
-    
     - https://www.techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/
     
 
