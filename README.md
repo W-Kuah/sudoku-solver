@@ -25,7 +25,7 @@ $ source venv/bin/activate
 $ python -m pip install -r requirements.txt
 ```
 
-5. To test program run imgSolver.py
+3. To test program run imgSolver.py
 ```console
 $ python imgSolver.py
 ```
@@ -47,6 +47,7 @@ Where to get help:
 Maintainers and Contributors:
 ---------------------------------------------
 Author: Warren Kuah
+
 Foundations:
     - https://data-flair.training/blogs/opencv-sudoku-solver/
     - https://www.techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/
