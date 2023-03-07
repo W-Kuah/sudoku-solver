@@ -86,9 +86,10 @@ def get_InvPerspective(trans_img, masked_num, location, trans_height = 900, tran
     reverted_img = cv2.warpPerspective(masked_num, matrix, (trans_img.shape[1],trans_img.shape[0]))
     return reverted_img
 
-def orientateImg(img, def_height=368, def_width=490):
+def orientateImg(actual_image, pathToFile, def_height=368, def_width=490):
+    img = cv2.imread(os.path.join(pathToFile, actual_image))
     height, width, channels = img.shape
-    # print(f"Original:\n   Height: {height}\n   Width: {width}")
+
     if height > def_height or width > def_width:
         height_diff = height - def_height
         width_diff = width - def_width
@@ -105,12 +106,7 @@ def orientateImg(img, def_height=368, def_width=490):
         # print(f"New:\n   Height: {height}\n   Width: {width}")
     return img
     
-def solveSudokuImg(actual_image, pathToFile="Input"):
-    # Read image
-    img = cv2.imread(os.path.join(pathToFile, actual_image))
-    img = orientateImg(img)
-    #cv2.imshow("Input image", img)
-
+def findNum(img):
     # Find image and location of the board
     board, location = find_board(img)
     #cv2.imshow("Board", board)
@@ -135,7 +131,16 @@ def solveSudokuImg(actual_image, pathToFile="Input"):
 
     # Reshape the array from a 1D flat list into a 9x9 2D matrix
     board_num = np.array(predicted_numbers).astype('uint8').reshape(9,9)
-    #print(board_num)
+    return board, location, predicted_numbers, board_num
+
+
+
+def solveSudokuImg(actual_image, pathToFile="Input"):
+    # Orientate image
+    img = orientateImg(actual_image, pathToFile)
+
+    # Find board locations and predicted numbers
+    board, location, predicted_numbers, board_num = findNum(img)
 
     try: 
         solved_board_nums = get_board(board_num)

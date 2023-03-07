@@ -1,4 +1,4 @@
-from imgSolver import solveSudokuImg
+from imgRW import solveSudokuImg
 import os
 
 def main():
