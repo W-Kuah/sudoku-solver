@@ -157,10 +157,10 @@ def findNum(img):
 
 
 
-def solveSudokuImg(actual_image, pathToFile="Input"):
+def solveSudokuImg(actual_image, pathToFile="input"):
     try:
         # Orientate image
-        if actual_image[-4:] != '.jpg':
+        if actual_image[-4:] != '.jpg' and actual_image[-5:] != '.jpeg':
             raise Exception
         img = orientateImg(actual_image, pathToFile)
         try:
