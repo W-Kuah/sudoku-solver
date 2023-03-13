@@ -45,11 +45,34 @@ def find_board(img):
 # Takes the image of the board and return it with a perspective transformation.
 def get_perspective(source_img, location, dest_height = 900, dest_width = 900):
     source_coordinates = np.float32([location[0], location[3], location[1], location[2]])
+    # Check if the board is too small
+    area_size = calculate_quadArea(source_coordinates)
+    if area_size < 4500:
+        raise Exception
     destination_coordinates = np.float32([[0, 0], [dest_width, 0], [0, dest_height], [dest_width, dest_height]])
     ## Utilize Perspective Transform Algorithm
     matrix = cv2.getPerspectiveTransform(source_coordinates, destination_coordinates)
     trans_img = cv2.warpPerspective(source_img, matrix, (dest_width, dest_height))
     return trans_img
+
+def calculate_quadArea(source_coordinates):
+    # Brahmaguptas Formula
+    a = source_coordinates[1][0]
+    b = source_coordinates[3][0]
+    c = source_coordinates[2][0]
+    d = source_coordinates[0][0]
+    AB = calculate_length(a,b)
+    BC = calculate_length(b,c)
+    CD = calculate_length(c,d)
+    DA = calculate_length(d,a)
+
+    semip = (AB + BC + CD + DA)/2
+    area = ((semip-AB)*(semip-BC)*(semip-CD)*(semip-DA))**0.5
+    return round(area,2)
+
+def calculate_length(coordinate1,coordinate2):
+    return ((coordinate2[0] - coordinate1[0])**2 + (coordinate2[1] - coordinate1[1])**2)**0.5
+    
 
 # Splits the sudoku board into the individual numbers
 def split_boxes(board):
@@ -127,7 +150,6 @@ def findNum(img):
         index = (np.argmax(i))
         predicted_number = CLASSES[index]
         predicted_numbers.append(predicted_number)
-    #print(predicted_numbers)
 
     # Reshape the array from a 1D flat list into a 9x9 2D matrix
     board_num = np.array(predicted_numbers).astype('uint8').reshape(9,9)
@@ -136,45 +158,50 @@ def findNum(img):
 
 
 def solveSudokuImg(actual_image, pathToFile="Input"):
-    # Orientate image
-    img = orientateImg(actual_image, pathToFile)
+    try:
+        # Orientate image
+        if actual_image[-4:] != '.jpg':
+            raise Exception
+        img = orientateImg(actual_image, pathToFile)
+        try:
+            # Find board locations and predicted numbers
+            board, location, predicted_numbers, board_num = findNum(img)
+            try: 
+                solved_board_nums = get_board(board_num)
 
-    # Find board locations and predicted numbers
-    board, location, predicted_numbers, board_num = findNum(img)
-
-    try: 
-        solved_board_nums = get_board(board_num)
-
-        # create a binary array indicating which parts are unsolved and which have a given number.
-        binArr = np.where(np.array(predicted_numbers)>0,0,1)
-        #print(binArr)
-        ## Fetch the solved number from the board
-        flat_solved_board_nums = solved_board_nums.flatten()*binArr
-        ## Create a mask for the board
-        mask = np.zeros_like(board)
-        ## Show the numbers in the mask
-        solved_board_mask = displayNumbers(mask, flat_solved_board_nums)
-        #cv2.imshow("Solved Mask", solved_board_mask)
-        ## Revert perspective
-        inv = get_InvPerspective(img, solved_board_mask, location)
-        #cv2.imshow("Inverse Perspective", inv)
-        ## 
-        combined = cv2.addWeighted(img, 0.6, inv, 1, 0)
-        #cv2.imshow("Final result", combined)
-        cv2.imwrite(os.path.join("Output", "Result-" + actual_image), combined)
-        #cv2.waitKey(0)
+                # create a binary array indicating which parts are unsolved and which have a given number.
+                binArr = np.where(np.array(predicted_numbers)>0,0,1)
+                #print(binArr)
+                ## Fetch the solved number from the board
+                flat_solved_board_nums = solved_board_nums.flatten()*binArr
+                ## Create a mask for the board
+                mask = np.zeros_like(board)
+                ## Show the numbers in the mask
+                solved_board_mask = displayNumbers(mask, flat_solved_board_nums)
+                #cv2.imshow("Solved Mask", solved_board_mask)
+                ## Revert perspective
+                inv = get_InvPerspective(img, solved_board_mask, location)
+                #cv2.imshow("Inverse Perspective", inv)
+                ## 
+                combined = cv2.addWeighted(img, 0.6, inv, 1, 0)
+                #cv2.imshow("Final result", combined)
+                cv2.imwrite(os.path.join("Output", "Result-" + actual_image), combined)
+                # cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                return "Solution found and returned."
+            except:
+                return "Solution doesn't exist. Or Model misread digits."
+        except:
+            return "Board detected is too small or does not exist."
     except:
-        print("Solution doesn't exist. Model misread digits.")
-
-    cv2.destroyAllWindows()
+        return "Invalid file. Please upload an jpg image file."
+    
+    
 
 
 def test():
-    solveSudokuImg('sudokuImg0.jpg',pathToFile="testInput")
-    solveSudokuImg('sudokuImg1.jpg',pathToFile="testInput")
-    solveSudokuImg('sudokuImg2.jpg',pathToFile="testInput")
-    solveSudokuImg('squares.jpg',pathToFile="testInput")
-    solveSudokuImg('math.jpg',pathToFile="testInput")
+    solveSudokuImg('unsolvable.jpg',pathToFile="testInput")
+
 
 
 if __name__ == "__main__":
